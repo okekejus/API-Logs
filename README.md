@@ -14,6 +14,7 @@ The Instagram connection was fairly straight forward to set up, making use of th
 - Total Followers
 - Total Following
 - Total Posts
+- Run Date
 
 
 Outputs are read into PowerBI using the Azure Blob connection, and then concatenated into one cohesive dataset for use within the report. 
