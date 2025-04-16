@@ -17,12 +17,17 @@ The Instagram connection was fairly straight forward to set up, making use of th
 - Run Date
 
 
-Outputs are read into PowerBI using the Azure Blob connection, and then concatenated into one cohesive dataset for use within the report. 
+Outputs are read into PowerBI using the Azure Blob connection, and then concatenated into one cohesive dataset for reporting purposes. 
 
 # Envoke 
 [Envoke](https://envoke.com/) is a platform for sending optional and mandatory emails to stakeholders and members of an organization. It is used frequently by my current employer to contact various individuals on various topics. Envoke provides business accounts with an API at no additional cost. Users begin with a limit of 1000 API calls a day, and 3 requests per call. 
 
-My script uses a combination of the Contacts and Reporting APIs provided by Envoke. They were used to gather a list of currently active subscribers, a daily count of said subscribers, and metrics related to messages sent out on a given day. The `requests, os, json, pandas, datetime, dotenv, time, and numpy` modules were used in this script. 
+My script uses a combination of the Contacts and Reporting APIs provided by Envoke. The `requests, os, json, pandas, datetime, dotenv, time, and numpy` modules were used in this script. The outputs (.csv) are as follows: 
+- A list of active contacts based on consent status, updated daily
+- Count of all active contacts on run date
+- Messages sent on run date + associated metrics (Bounces, Clicks, Opens, Unsubscribes)
+
+They are all fed into an Azure Data Lake and read into PowerBI for reporting purposes.
 
 At the moment, filtering through + downloading contacts takes 25 minutes, as there are over 100,000 contacts, and the request is capped at 100 rows per page. My immediate next steps are to speed up its runtime by making 3 requests per call using `concurrent`, as well as adding a progress bar to the contact download process. 
 # LinkedIn 
