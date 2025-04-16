@@ -1,9 +1,7 @@
 # API Logs
 A repository for code used to interact with APIs from various data sources. These are mainly code snippets from previous/ongoing work projects. Over time I expect to revisit these, and would like to improve my work in the process.
 
-APIs used are listed below. Majority of these are written in python, with the exception of the [REDCap API](https://project-redcap.org/), which is something I saved from my time working with the [Ontario Birth Study](https://ontariobirthstudy.com/). 
-
-None of the data collected using these scripts belongs to me, so I will be unable to share any of the datasets associated with the files.
+APIs used are listed below. None of the data collected using these scripts belongs to me, so I will be unable to share any of the datasets associated with the files.
 
 # Meta (Instagram/Facebook) 
 
@@ -16,7 +14,7 @@ The Instagram connection was fairly straight forward to set up, making use of th
 - Run Date
 
 
-Outputs are read into PowerBI using the Azure Blob connection, and then concatenated into one cohesive dataset for reporting purposes. 
+Outputs are fed into PowerBI using the Azure Blob connection, and then concatenated into one cohesive dataset for reporting purposes. 
 
 # Google Analytics 
 Google Analytics is a very popular web analytics service offered by Google. It is used to track/report website and mobile app traffic and events. There are reporting options available within Google Analytics, but the storage options are restricted to a 12 month period (anything older is deleted). As a result, there was a need for automated extraction and storage of data before its deletion. 
@@ -36,5 +34,6 @@ My script uses a combination of the Contacts and Reporting APIs provided by Envo
 They are all fed into an Azure Data Lake and read into PowerBI for reporting purposes.
 
 At the moment, filtering through + downloading contacts takes 25 minutes, as there are over 100,000 contacts, and the request is capped at 100 rows per page. My immediate next steps are to speed up its runtime by making 3 requests per call using `concurrent`, as well as adding a progress bar to the contact download process. 
+
 # LinkedIn 
-# REDCap
+
