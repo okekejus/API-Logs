@@ -3,6 +3,8 @@ A repository for code used to interact with APIs from various data sources. Thes
 
 APIs used are listed below. Majority of these are written in python, with the exception of the [REDCap API](https://project-redcap.org/), which is something I saved from my time working with the [Ontario Birth Study](https://ontariobirthstudy.com/). 
 
+None of the data collected using these scripts belongs to me, so I will be unable to share any of the datasets associated with the files.
+
 # Google Analytics 
 # Meta (Instagram/Facebook) 
 # Envoke 
