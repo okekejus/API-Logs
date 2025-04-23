@@ -14,7 +14,7 @@ The Instagram connection was fairly straight forward to set up, making use of th
 - Run Date
 
 
-Outputs are fed into PowerBI using the Azure Blob connection, and then concatenated into one cohesive dataset for reporting purposes. 
+Outputs are fed into PowerBI using the Azure Blob connection, and then concatenated into one cohesive dataset for reporting purposes. The Facebook interaction is a work in progress - additional verification is required before scope access can be granted. I am currently working on acquiring said verification for my workplace. 
 
 # Google Analytics 
 Google Analytics is a very popular web analytics service offered by Google. It is used to track/report website and mobile app traffic and events. There are reporting options available within Google Analytics, but the storage options are restricted to a 12 month period (anything older is deleted). As a result, there was a need for automated extraction and storage of data before its deletion. 
@@ -35,5 +35,4 @@ They are all fed into an Azure Data Lake and read into PowerBI for reporting pur
 
 At the moment, filtering through + downloading contacts takes 25 minutes, as there are over 100,000 contacts, and the request is capped at 100 rows per page. My immediate next steps are to speed up its runtime by making 3 requests per call using `concurrent`, as well as adding a progress bar to the contact download process. 
 
-# LinkedIn 
 
