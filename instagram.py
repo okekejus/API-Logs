@@ -18,7 +18,13 @@
     
       vals = pd.DataFrame([vals])
       vals.to_csv(f\"{run_date}_instagram.csv\", index=False)
-   
+
+if __name__ == "__main__": 
+    load_dotenv()
+    tkn = os.getenv('INSTA_TOKEN')
+    run_date = dt.datetime.today().date()
+    fetch_public()
+
 
  
  
