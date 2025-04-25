@@ -33,6 +33,8 @@ My script uses a combination of the Contacts and Reporting APIs provided by Envo
 
 They are all fed into an Azure Data Lake and read into PowerBI for reporting purposes.
 
-At the moment, filtering through + downloading contacts takes 25 minutes, as there are over 100,000 contacts, and the request is capped at 100 rows per page. My immediate next steps are to speed up its runtime by making 3 requests per call using `concurrent`, as well as adding a progress bar to the contact download process. 
+
+# Next Steps 
+At the moment, one request is made per API call for each script. My immediate next steps are to speed up the process by including the `concurrent` module. 
 
 
