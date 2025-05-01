@@ -106,26 +106,48 @@ def get_metrics(starting_date, ending_date):
                     row_data[metrics[i].name] = metric.value
                 addon.append(row_data)
     
-    results_df = pd.concat([pd.DataFrame(data), pd.DataFrame(addon)])
-
-    # Correcting date format    
-    results_df['date'] = results_df['date'].apply(lambda x: datetime.strptime(x, '%Y%m%d').date().strftime('%Y-%m-%d'))
-    results_df.columns = ['event_name', 'country', 'city', 'page_title', 'page_location', 'date', 'percent_scrolled', 'platform_device', 'browser', 'sessions', 'active_users', 'user_engagement_duration', 'total_users', 
-                          'scrolled_users', 'screen_page_views_per_user', 'bounce_rate', 'event_count']
-    results_df.sort_values('date', ascending=True, inplace=True)
-        # Resetting index
-    results_df.reset_index(drop=True, inplace=True)
+        results_df = pd.concat([pd.DataFrame(data), pd.DataFrame(addon)])
     
-    dtypes = {'sessions': 'int', 
-              'active_users': 'int', 
-              'user_engagement_duration': 'int', 
-              'total_users': 'int',
-              'scrolled_users': 'int',
-              'screen_page_views_per_user': 'float',
-              'bounce_rate': 'float',
-              'event_count': 'int'}
-        # changing types 
-    results_df = results_df.astype(dtypes)
+        # Correcting date format    
+        results_df['date'] = results_df['date'].apply(lambda x: datetime.strptime(x, '%Y%m%d').date().strftime('%Y-%m-%d'))
+        results_df.columns = ['event_name', 'country', 'city', 'page_title', 'page_location', 'date', 'percent_scrolled', 'platform_device', 'browser', 'sessions', 'active_users', 'user_engagement_duration', 'total_users', 
+                              'scrolled_users', 'screen_page_views_per_user', 'bounce_rate', 'event_count']
+        results_df.sort_values('date', ascending=True, inplace=True)
+            # Resetting index
+        results_df.reset_index(drop=True, inplace=True)
+        
+        dtypes = {'sessions': 'int', 
+                  'active_users': 'int', 
+                  'user_engagement_duration': 'int', 
+                  'total_users': 'int',
+                  'scrolled_users': 'int',
+                  'screen_page_views_per_user': 'float',
+                  'bounce_rate': 'float',
+                  'event_count': 'int'}
+            # changing types 
+        results_df = results_df.astype(dtypes)
+    else: 
+         results_df = pd.DataFrame(data)
+    
+        # Correcting date format    
+        results_df['date'] = results_df['date'].apply(lambda x: datetime.strptime(x, '%Y%m%d').date().strftime('%Y-%m-%d'))
+        results_df.columns = ['event_name', 'country', 'city', 'page_title', 'page_location', 'date', 'percent_scrolled', 'platform_device', 'browser', 'sessions', 'active_users', 'user_engagement_duration', 'total_users', 
+                              'scrolled_users', 'screen_page_views_per_user', 'bounce_rate', 'event_count']
+        results_df.sort_values('date', ascending=True, inplace=True)
+            # Resetting index
+        results_df.reset_index(drop=True, inplace=True)
+        
+        dtypes = {'sessions': 'int', 
+                  'active_users': 'int', 
+                  'user_engagement_duration': 'int', 
+                  'total_users': 'int',
+                  'scrolled_users': 'int',
+                  'screen_page_views_per_user': 'float',
+                  'bounce_rate': 'float',
+                  'event_count': 'int'}
+            # changing types 
+        results_df = results_df.astype(dtypes)
+        
     
     return results_df
 
