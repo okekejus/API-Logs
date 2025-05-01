@@ -6,6 +6,9 @@ import sys
 from datetime import datetime, timedelta
 from dotenv import load_dotenv, dotenv_values
 
+# Progress bar 
+from tqdm import tqdm
+
 # Analytics modules
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta import DateRange, Metric, Dimension, RunReportRequest
