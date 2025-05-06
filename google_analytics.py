@@ -86,7 +86,7 @@ def get_metrics(starting_date, ending_date):
     
         for i in tqdm(range(iterations), desc="Downloading..."): 
             offset = offset + 250000
-            print
+            
     
             request = RunReportRequest(
             property=f"properties/{property_id}",
