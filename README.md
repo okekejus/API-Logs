@@ -1,5 +1,5 @@
 # API Logs
-A repository for code used to interact with APIs from various data sources. These are mainly code snippets from previous/ongoing work projects. Over time I expect to revisit these, and would like to improve my work in the process.
+A repository for code used to interact with APIs from various data sources. These are mainly code snippets from previous/ongoing work projects. Over time I expect to revisit these, and would like to improve my work in the process. All scripts are set up to run as background tasks, so the main focus of the scripts will be connection to + retrieval of data, not interactivity. 
 
 APIs used are listed below. None of the data collected using these scripts belongs to me, so I will be unable to share any of the datasets associated with the files.
 
