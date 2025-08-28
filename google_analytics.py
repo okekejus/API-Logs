@@ -160,9 +160,16 @@ def downloads_fetch(day, property_id):
         results_df2.to_parquet(f"forms_download_{day}.gzip", index=False)
         print(f"forms_download_{day}.gzip saved.")
 
-day = datetime.today().date().strftime("%Y-%m-%d")
-property_id = "PROPERTY_ID"
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "CREDENTIALS.json"
+def main(day, property_id): 
+    views_fetch(day, property_id)
+    time.sleep(0.25)
+    downloads_fetch(day, property_id)
+    
+if __name__ == __main__: 
+    day = datetime.today().date().strftime("%Y-%m-%d")
+    property_id = "PROPERTY_ID"
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "CREDENTIALS.json"
+    main(day, property_id)
 
 
 
