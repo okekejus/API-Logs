@@ -165,7 +165,7 @@ def main(day, property_id):
     time.sleep(0.25)
     downloads_fetch(day, property_id)
     
-if __name__ == __main__: 
+if __name__ == "__main__": 
     day = datetime.today().date().strftime("%Y-%m-%d")
     property_id = "PROPERTY_ID"
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "CREDENTIALS.json"
