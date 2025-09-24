@@ -1,203 +1,108 @@
-import requests 
+import requests
+import concurrent.futures
 from requests.auth import HTTPBasicAuth
 import os
-import json 
-import pandas as pd 
-import datetime as dt 
-from dotenv import load_dotenv, dotenv_values
+import json
+import pandas as pd
+import datetime as dt
+from dotenv import load_dotenv
 import time
-import numpy as np 
+import numpy as np
+import logging
+from email_content import html_content  # Confidential HTML content
 
+# Load environment variables
+load_dotenv()
 
-# Functions for formatting data 
-def left(s, amount): 
-    return s[:amount]
+# Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("survey_sender.log"),
+        logging.StreamHandler()
+    ]
+)
 
-def mid(s, offset, amount): 
-    return s[offset:offset+amount]
-
-def expander(list, phrase, offset=2, amount=2): 
-    detection = [s.find(phrase) > 0 for s in list]
-
+def get_contact(email, session):
+    """Check if the email exists as a contact in Envoke."""
+    url = f"https://e1.envoke.com/v1/contacts?email={email}&limit=1"
+    headers = {'Accept': 'application/json'}
     try:
-        detection = detection.index(True)
-        resp = list[detection]
-        resp = mid(resp, offset, amount)
-        return resp
-    except ValueError as v: 
-        return np.nan
-    
-# Gathering
-def get_email_metrics(run_date): 
+        response = session.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        if data:
+            logging.info(f"Contact found for email: {email}")
+            return data[0]  # assuming single contact returned
+        else:
+            logging.info(f"No contact found for email: {email}")
+            return None
+    except Exception as e:
+        logging.error(f"Error retrieving contact {email}: {e}")
+        return None
 
-        url = f"https://e1.envoke.com/v1/reports/emailActivityMetrics?start_date={run_date}&end_date={run_date}"
-        params = {'filter[sent_date]': [f"{run_date}"]}
-        payload = {}
-        headers = {}
+def send_survey(recip, contact_name, html_content, session):
+    """Send the survey email via Envoke API."""
+    url = "https://e1.envoke.com/api/v4legacy/send/SendEmails.json"
 
+    payload = {
+        "SendEmails": [
+            {
+                "EmailDataArray": [
+                    {
+                        "email": [
+                            {
+                                "to_email": recip,
+                                "to_name": contact_name,
+                                "from_email": "from_email",
+                                "from_name": "from_name",
+                                "reply_email": "from_email",
+                                "reply_name": "No reply",
+                                "message_subject": "We Want Your Feedback!",
+                                "message_html": html_content
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
 
-        try: 
-            resp = requests.get(url=url, headers=headers, data=payload, auth=basic, params=params) # sending request to API using url, filter, and authorization 
+    headers = {'Content-Type': 'application/json'}
+    try:
+        response = session.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        logging.info(f"Survey sent to {recip} ({contact_name})")
+        return response
+    except Exception as e:
+        logging.error(f"Failed to send survey to {recip}: {e}")
+        return None
 
-            if resp.status_code == 200: # if response is successful, turn the json file into a df for future use
-                
-                resp_df = pd.DataFrame(resp.json()) # conversion into dataframe
-                resp_df = resp_df[resp_df['sent_date'] == run_date] # additional filtering required at the moment, for some reason the date filter doesn't work.
-                
-                
-                if len(resp_df['message_name']) > 0:
-                    old_message_stats = pd.read_csv('envoke/Messages/aggregate_message_metrics.csv')
-                    resp_df.to_csv(f'envoke/Messages/message_stats_{run_date}.csv', index=False)
-                    new_aggregate = pd.concat([old_message_stats, resp_df])
-                    new_aggregate.to_csv("envoke/Messages/aggregate_message_metrics.csv", index=False)
-                    return resp_df
-                else: 
-                    print(f"There have been no messages sent using Envoke on {run_date}")
+def main():
+    contact_list = ["email@address1.com", "email@address2.com"]
 
-            else: 
-                print(f"Initial request failed due to error code {resp.status_code}")
+    with requests.sessions.Session() as session:
+        session.auth = (os.getenv("USERNAME"), os.getenv("PASSWORD"))
 
-        except Exception as e: 
-            print(f"Error occurred during the request: {e}")
+        for contact_email in contact_list:
+            logging.info(f"Processing contact: {contact_email}")
+            contact_data = get_contact(contact_email, session)
 
-        except requests.exceptions.RequestException as e: # this will handle specific requests exceptions, which can be informative
-            print(f"An unexpected error occurred during the request: {e}")
+            if contact_data is None:
+                # TODO: Create contact if needed
+                logging.warning(f"Contact not found: {contact_email} Creation logic not implemented.")
+                continue
+            else:
+                first_name = contact_data.get("first_name", "")
+                last_name = contact_data.get("last_name", "")
+                contact_name = f"{first_name} {last_name}".strip()
 
-
-def get_active_contacts(status_filters=["Implied - No Expiry","Express"], skip=0):
-    resp_df = pd.DataFrame()
-    check = 1
-    all_results = []
-    url = f"https://e1.envoke.com/v1/contacts?skip={skip}&limit=100"
-    params = {'filter[consent_status]': status_filters}
-    payload = {}
-    headers = {}
-
-    # need to add a filter for people with status: 'Implied - No Expiry', 'Express' to prevent fetching ALL contacts in the database. 
-    try: 
-        response = requests.get(url, headers=headers, data=payload, auth=basic, params=params)
-
-        if response.status_code == 200: 
-            response_df = pd.DataFrame(response.json()) # convert initial response to dataframe
-            all_results.append(response.json()) # append results to list for future concatenation
-            check = len(response.json()) # check the length of the response to the request
-        else: 
-            print(f"Initial request failed with status code {response.status_code}")
-            check = 0 
-    except Exception as e: 
-        print(f"Error occurred during initial request: {e}")
-        check = 0 # stop loop if there is request error 
-
-    while check > 0: 
-        skip += 100 # adding 100 to the skip number as you are limited to a maximum of 100 contacts per request
-        url = f"https://e1.envoke.com/v1/contacts?skip={skip}&limit=100"
-        print(f"Skipping {skip-100} contacts.")
-
-        try:
-            response = requests.get(url, headers=headers, data=payload, auth=basic, params=params) # send next request 
-
-            if response.status_code == 200: 
-                results = response.json() # get the json response 
-                all_results.append(results)
-                check = len(results)
-
-
-                time.sleep(1) 
-            else: 
-                print(f"Request failed with code {response.status_code}")
-                check = 0 # stop loop 
-        except Exception as e: 
-            print(f"Error occurred during the request: {e}")
-            check = 0 
-    current_contacts = pd.concat([pd.DataFrame(result) for result in all_results], ignore_index=True)
-
-    current_contacts['full_name'] = current_contacts['first_name'] + ' ' + current_contacts['last_name'] # full name to make things easier 
-    current_contacts['full_name'] = current_contacts['full_name'].replace(r"^\s*$", np.nan, regex=True)
-    current_contacts['date_created'] = current_contacts['date_created'].apply(lambda x: left(x, 10))
-    current_contacts['current_director'] = current_contacts['interests'].apply(lambda x: expander(x, "currently a director", amount=3))
-    current_contacts['been_director'] = current_contacts['interests'].apply(lambda x: expander(x, "been a director",  amount=3))
-    current_contacts['is_condo_owner'] = current_contacts['interests'].apply(lambda x: expander(x, "a condo owner", amount=3))
-    current_contacts['referral'] = current_contacts['interests'].apply(lambda x: True if expander(x, "Referral") == "Ref" else False)
-    current_contacts["full_name"] = current_contacts["full_name"].str.title()
-    return current_contacts
-
-
-def get_revoked_contacts(status_filters=['Revoked']):
-    resp_df = pd.DataFrame()
-    skip = 0
-    check = 1
-    all_results = []
-    url = f"https://e1.envoke.com/v1/contacts?skip={skip}&limit=100"
-    params = {'filter[consent_status]': status_filters}
-    payload = {}
-    headers = {}
-
-    # need to add a filter for people with status: 'Implied - No Expiry', 'Express' to prevent fetching ALL contacts in the database. 
-    try: 
-        response = requests.get(url, headers=headers, data=payload, auth=basic, params=params)
-
-        if response.status_code == 200: 
-            response_df = pd.DataFrame(response.json()) # convert initial response to dataframe
-            all_results.append(response.json()) # append results to list for future concatenation
-            check = len(response.json()) # check the length of the response to the request
-        else: 
-            print(f"Initial request failed with status code {response.status_code}")
-            check = 0 
-    except Exception as e: 
-        print(f"Error occurred during initial request: {e}")
-        check = 0 # stop loop if there is request error 
-
-    while check > 0: 
-        skip += 100 # adding 100 to the skip number as you are limited to a maximum of 100 contacts per request
-        url = f"https://e1.envoke.com/v1/contacts?skip={skip}&limit=100"
-        print(f"Skipping {skip-100} contacts.")
-
-        try:
-            response = requests.get(url, headers=headers, data=payload, auth=basic, params=params) # send next request (headers and payload are needed to maintain i guess)
-
-            if response.status_code == 200: 
-                results = response.json() # get the json response 
-                all_results.append(results)
-                check = len(results)
-
-
-                time.sleep(1) 
-            else: 
-                print(f"Request failed with code {response.status_code}")
-                check = 0 # stop loop 
-        except Exception as e: 
-            print(f"Error occurred during the request: {e}")
-            check = 0 
-
-    revoked_contacts = pd.concat([pd.DataFrame(result) for result in all_results])
-    revoked_contacts['full_name'] = revoked_contacts['first_name'] + ' ' + revoked_contacts['last_name'] # full name to make things easier 
-    revoked_contacts['full_name'] = revoked_contacts['full_name'].replace(r"^\s*$", np.nan, regex=True)
-    revoked_contacts['date_created'] = revoked_contacts['date_created'].apply(lambda x: left(x, 10))
-    revoked_contacts['revoked_director'] = revoked_contacts['interests'].apply(lambda x: expander(x, "revokedly a director", amount=3))
-    revoked_contacts['been_director'] = revoked_contacts['interests'].apply(lambda x: expander(x, "been a director",  amount=3))
-    revoked_contacts['is_condo_owner'] = revoked_contacts['interests'].apply(lambda x: expander(x, "a condo owner", amount=3))
-    revoked_contacts['referral'] = revoked_contacts['interests'].apply(lambda x: True if expander(x, "Referral") == "Ref" else False)
-    revoked_contacts["full_name"] = revoked_contacts["full_name"].str.title()
-    return revoked_contacts
-
+                response = send_survey(contact_email, contact_name, html_content, session)
+                if response and response.status_code == 200:
+                    logging.info(f"Successfully sent survey to {contact_email}")
+                else:
+                    logging.error(f"Survey failed for {contact_email}")
 
 if __name__ == "__main__":
-    load_dotenv() 
-    basic = HTTPBasicAuth(os.getenv("USERNAME"), os.getenv("PASSWORD"))
-    run_date = str(dt.date.today() - dt.timedelta(days = 1))
-
-    get_email_metrics(run_date=run_date)
-
-    current_contacts = get_active_contacts()
-    revoked_contacts = get_revoked_contacts()
-
-    d = {'date': [run_date], 
-     'total_active_contacts': [len(current_contacts['id'])], 
-     'total_revoked_contacts': [len(revoked_contacts['id'])]}
-    
-    master_contact_list_addon = pd.DataFrame(d)
-    current_contacts = current_contacts.drop(columns=['custom_fields','interests', 'autoresponders'])
-    current_contacts.to_csv(f"current_contacts.csv", index=False) 
-    revoked_contacts.to_csv(f"revoked_contacts.csv", index=False) 
-    master_contact_list_addon.to_csv(f"addon.csv", index=False)
-     
+    main()
