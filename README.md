@@ -1,7 +1,5 @@
 # API Logs
-A repository for code used to interact with APIs from various data sources. These are mainly code snippets from previous/ongoing work projects. Over time I expect to revisit these, and would like to improve my work in the process. All scripts are set up to run as background tasks, so the main focus of the scripts will be connection to + retrieval of data, not interactivity. 
-
-APIs used are listed below. None of the data collected using these scripts belongs to me, so I will be unable to share any of the datasets associated with the files.
+A repository for API pulls I have done for various work projects. Each one is built to reflect a different business need, and those needs will be described in their respective sections below. 
 
 # Meta (Instagram/Facebook) 
 
@@ -26,15 +24,12 @@ The output is fed into an Azure Data Lake. Script is run daily, monthly, quarter
 # Envoke 
 [Envoke](https://envoke.com/) is a platform for sending optional and mandatory emails to stakeholders and members of an organization. It is used frequently by my current employer to contact various individuals on various topics. Envoke provides business accounts with an API at no additional cost. Users begin with a limit of 1000 API calls a day, and 3 requests per call. 
 
-My script uses a combination of the Contacts and Reporting APIs provided by Envoke. The `requests, os, json, pandas, datetime, dotenv, time, and numpy` modules were used in this script. The outputs (.csv) are as follows: 
-- A list of active contacts based on consent status, updated daily
-- Count of all active contacts on run date
-- Messages sent on run date + associated metrics (Bounces, Clicks, Opens, Unsubscribes)
+The request was to create a tool that sends out emails to contacts from a list that is updated weekly. The [envoke.py](https://github.com/okekejus/API-Logs/blob/main/envoke.py) script takes this list of contacts, filters out repetitions (users only need to get the email once), and sends out an email with the survey link. 
 
-They are all fed into an Azure Data Lake and read into PowerBI for reporting purposes.
+It is run using an Azure pipeline, set for excecution every Friday. 
 
 
 # Next Steps 
-At the moment, one request is made per API call for each script. My immediate next steps are to speed up the process by including the `concurrent` module. 
+Implementation of "concurrent" module. 
 
 
